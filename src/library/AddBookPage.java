@@ -5,78 +5,94 @@ import java.awt.*;
 import java.sql.*;
 
 public class AddBookPage extends JFrame {
-    JTextField title, author;
-    JButton save;
+    private JTextField nameField, publisherField, priceField, yearField;
 
     public AddBookPage() {
         setTitle("Add New Book");
-        setSize(400, 250);
-        setLayout(new GridLayout(3, 2, 10, 10));
+        setSize(400, 300);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE); // closes only this window, not entire app
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setLayout(new GridLayout(5, 2, 10, 10));
+        setResizable(false);
 
-        // === UI Elements ===
-        add(new JLabel("Book Title:"));
-        title = new JTextField();
-        add(title);
+        add(new JLabel("Book Name:"));
+        nameField = new JTextField();
+        add(nameField);
 
-        add(new JLabel("Author:"));
-        author = new JTextField();
-        add(author);
+        add(new JLabel("Publisher:"));
+        publisherField = new JTextField();
+        add(publisherField);
 
-        save = new JButton("Save Book");
-        add(new JLabel()); // filler cell
-        add(save);
+        add(new JLabel("Price:"));
+        priceField = new JTextField();
+        add(priceField);
 
-        // === Button Action ===
-        save.addActionListener(e -> saveBook());
+        add(new JLabel("Year:"));
+        yearField = new JTextField();
+        add(yearField);
+
+        JButton saveBtn = new JButton("Save");
+        JButton cancelBtn = new JButton("Cancel");
+        saveBtn.addActionListener(e -> saveBook());
+        cancelBtn.addActionListener(e -> dispose());
+        add(saveBtn);
+        add(cancelBtn);
     }
 
-    // === Save book method ===
-    void saveBook() {
-        String bookTitle = title.getText().trim();
-        String bookAuthor = author.getText().trim();
+    
+    private void showToast(String message) {
+    JDialog dialog = new JDialog();
+    dialog.setUndecorated(true);
 
-        // --- Validation ---
-        if (bookTitle.isEmpty() || bookAuthor.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "⚠️ Please fill in both fields!", "Input Error", JOptionPane.WARNING_MESSAGE);
+    JLabel label = new JLabel(message, SwingConstants.CENTER);
+    label.setOpaque(true);
+    label.setBackground(new Color(46, 204, 113)); 
+    label.setForeground(Color.WHITE);
+    label.setFont(new Font("Segoe UI", Font.BOLD, 15));
+    label.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Color.BLACK),
+            BorderFactory.createEmptyBorder(15, 25, 15, 25)
+    ));
+
+    dialog.add(label);
+    dialog.pack();
+    dialog.setLocationRelativeTo(null);
+
+    Timer timer = new Timer(1500, e -> dialog.dispose());
+    timer.setRepeats(false);
+    timer.start();
+
+    dialog.setVisible(true);
+}
+
+    private void saveBook() {
+        String name = nameField.getText().trim();
+        String publisher = publisherField.getText().trim();
+        String priceText = priceField.getText().trim();
+        String year = yearField.getText().trim();
+
+        if (name.isEmpty() || publisher.isEmpty() || priceText.isEmpty() || year.isEmpty()) {
+            showToast("Please fill all fields!");
             return;
         }
 
         try (Connection con = DatabaseConnection.getConnection()) {
 
-            // --- Create table if not exists (with proper types and sizes) ---
             PreparedStatement ps = con.prepareStatement(
-                "CREATE TABLE IF NOT EXISTS books (" +
-                "id IDENTITY PRIMARY KEY, " +
-                "title VARCHAR(255), " +
-                "author VARCHAR(255))"
+                    "INSERT INTO books(name, publisher, price, pub_year) VALUES(?, ?, ?, ?)"
             );
-            ps.execute();
 
-            // --- Insert book record ---
-            ps = con.prepareStatement("INSERT INTO books(title, author) VALUES(?, ?)");
-            ps.setString(1, bookTitle);
-            ps.setString(2, bookAuthor);
+            ps.setString(1, name);
+            ps.setString(2, publisher);
+            ps.setInt(3, Integer.parseInt(priceText));
+            ps.setString(4, year);
             ps.executeUpdate();
 
-            JOptionPane.showMessageDialog(this, "✅ Book added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            showToast("Book added!");
+            dispose();
 
-            // --- Reset fields ---
-            title.setText("");
-            author.setText("");
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "❌ Error adding book: " + ex.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            showToast("Error: " + e.getMessage());
         }
-    }
-
-    // --- To test this page standalone ---
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new AddBookPage().setVisible(true));
     }
 }

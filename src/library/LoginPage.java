@@ -3,7 +3,6 @@ package library;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.*;
 
 public class LoginPage extends JFrame {
     JTextField userField;
@@ -15,34 +14,55 @@ public class LoginPage extends JFrame {
         setSize(600, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setResizable(false);
 
-        // ✅ Initialize database when the application starts
         DatabaseConnection.initializeDatabase();
 
         // === Background ===
-        JLabel bg = new JLabel(new ImageIcon("library.jpg"));
+        JLabel bg = new JLabel(new ImageIcon(getClass().getResource("/library/library.jpg")));
         bg.setLayout(new GridBagLayout());
         add(bg);
 
         // === Login Panel ===
-        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(3, 2, 12, 12));
         panel.setOpaque(false);
+        panel.setPreferredSize(new Dimension(350, 150));
 
-        panel.add(new JLabel("Username:", SwingConstants.RIGHT));
+        // === Styled Labels ===
+        JLabel userLabel = new JLabel("Username:", SwingConstants.RIGHT);
+        userLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        userLabel.setForeground(Color.WHITE);
+        userLabel.setOpaque(false);
+
+        JLabel passLabel = new JLabel("Password:", SwingConstants.RIGHT);
+        passLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        passLabel.setForeground(Color.WHITE);
+        passLabel.setOpaque(false);
+
+        // === Input Fields ===
         userField = new JTextField();
-        panel.add(userField);
+        userField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        panel.add(new JLabel("Password:", SwingConstants.RIGHT));
         passField = new JPasswordField();
-        panel.add(passField);
+        passField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
+        // === Button ===
         loginBtn = new JButton("Login");
+        loginBtn.setBackground(new Color(45, 140, 240));
+        loginBtn.setForeground(Color.WHITE);
+        loginBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        loginBtn.setFocusPainted(false);
+
+        // Add elements
+        panel.add(userLabel);
+        panel.add(userField);
+        panel.add(passLabel);
+        panel.add(passField);
         panel.add(new JLabel());
         panel.add(loginBtn);
 
         bg.add(panel);
 
-        // === Button Action ===
         loginBtn.addActionListener(e -> login());
     }
 
@@ -59,10 +79,7 @@ public class LoginPage extends JFrame {
     }
 
     public static void main(String[] args) {
-        // ✅ First connect and create all required tables
         DatabaseConnection.initializeDatabase();
-
-        // ✅ Then start the UI on the Event Dispatch Thread
         SwingUtilities.invokeLater(() -> new LoginPage().setVisible(true));
     }
 }
